@@ -75,7 +75,7 @@ export const getUsers = query({
 		}
 
 		const users = await ctx.db.query("users").collect();
-		return users.filter((user) => user.tokenIdentifier !== identity.tokenIdentifier);
+		return users.filter((user) => user.tokenIdentifier !== identity.tokenIdentifier.replace("https://",""));
 	},
 });
 
@@ -86,13 +86,14 @@ export const getMe = query({
 		if (!identity) {
 			throw new ConvexError("Unauthorized");
 		}
-
+        console.log("jjdhdj",identity);
 		const user = await ctx.db
 			.query("users")
-			.withIndex("by_tokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier))
+			.withIndex("by_tokenIdentifier", (q) => q.eq("tokenIdentifier", identity.tokenIdentifier.replace("https://","")))
 			.unique();
 
 		if (!user) {
+            console.log("jjdhdj",user)
 			throw new ConvexError("User not found");
 		}
 
