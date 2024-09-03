@@ -83,7 +83,7 @@ const UserListDialog = () => {
         reader.onload = (e) => setRenderedImage(e.target?.result as string);
         reader.readAsDataURL(selectedImage);
     },[selectedImage])
-
+	console.log("dfjkdjfk",users);
 	return (
 		<Dialog>
 			<DialogTrigger>
@@ -151,7 +151,7 @@ const UserListDialog = () => {
 
 							<div className='w-full '>
 								<div className='flex items-center justify-between'>
-									<p className='text-md font-medium'>{user.name || user.email.split("@")[0]}</p>
+									<p className='text-md font-medium'>{user.name == "Guest " ? user.email.split("@")[0] : user.name || user.email.split("@")[0]}</p>
 								</div>
 							</div>
 						</div>
