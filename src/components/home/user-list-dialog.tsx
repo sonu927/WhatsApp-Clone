@@ -19,6 +19,7 @@ import { Id } from "../../../convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../../convex/_generated/api";
 import toast from "react-hot-toast";
+import { useConversationStore } from "@/store/chat-store";
 
 const UserListDialog = () => {
 	const [selectedUsers, setSelectedUsers] = useState<Id<"users">[]>([]);
@@ -33,49 +34,63 @@ const UserListDialog = () => {
     const me = useQuery(api.users.getMe);
     const users = useQuery(api.users.getUsers);
 
-    const handleCreateConversation = async () => {
-        if(selectedUsers.length === 0) return;
-        setIsLoading(true);
-        try {
-            const isGroup = selectedUsers.length > 1;
-            let conversationId;
-            if(!isGroup){
-                conversationId = createConversation({
-                    participants: [...selectedUsers,me?._id!],  //,me?._id!
-                    isGroup: false,
-                })
-            }else{
-                const postUrl = await generateUploadUrl();
+    const { setSelectedConversation } = useConversationStore();
 
-                const result = await fetch(postUrl, {
-                    method: 'POST',
-                    headers: {"Content-Type": selectedImage?.type!},
-                    body: selectedImage,
-                });
+	const handleCreateConversation = async () => {
+		if (selectedUsers.length === 0) return;
+		setIsLoading(true);
+		try {
+			const isGroup = selectedUsers.length > 1;
 
-                const { storageId } = await result.json();
-                await createConversation({
-                    participants: [...selectedUsers,me?._id!], //,me?._id!
-                    isGroup: true,
-                    admin: me?._id!,//me?._id!,
-                    groupName,
-                    groupImage: storageId,
-                })
-            }
+			let conversationId;
+			if (!isGroup) {
+				conversationId = await createConversation({
+					participants: [...selectedUsers, me?._id!],
+					isGroup: false,
+				});
+			} else {
+				const postUrl = await generateUploadUrl();
 
-            setSelectedUsers([]);
-            dialogCloseRef.current?.click();
+				const result = await fetch(postUrl, {
+					method: "POST",
+					headers: { "Content-Type": selectedImage?.type! },
+					body: selectedImage,
+				});
+
+				const { storageId } = await result.json();
+
+				conversationId = await createConversation({
+					participants: [...selectedUsers, me?._id!],
+					isGroup: true,
+					admin: me?._id!,
+					groupName,
+					groupImage: storageId,
+				});
+			}
+
+			dialogCloseRef.current?.click();
+			setSelectedUsers([]);
 			setGroupName("");
 			setSelectedImage(null);
 
-			// TODO => Upadate a global state called "selectedConversationId"
-        } catch (error) {   
-            console.log("jdjs",error);
+			// TODO => Update a global state called "selectedConversation"
+			const conversationName = isGroup ? groupName : users?.find((user) => user._id === selectedUsers[0])?.name ;
+			setSelectedConversation({
+				_id: conversationId,
+				participants: selectedUsers,
+				isGroup,
+				image: isGroup ? renderedImage : users?.find((user) => user._id === selectedUsers[0])?.image,
+				name: conversationName,
+				admin: me?._id!,
+				email: isGroup ? undefined : users?.find((user) => user._id === selectedUsers[0])?.email,
+			});
+		} catch (err) {
 			toast.error("Failed to create conversation");
-        }finally {
-			setIsLoading(false)
+			console.error(err);
+		} finally {
+			setIsLoading(false);
 		}
-    }
+	};
 
     useEffect(()=>{
         if(!selectedImage) return;
