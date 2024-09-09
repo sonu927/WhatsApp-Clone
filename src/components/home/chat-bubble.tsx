@@ -6,6 +6,7 @@ import Image from "next/image";
 import { useState } from "react";
 import ReactPlayer from "react-player";
 import { Dialog, DialogContent, DialogDescription } from "../ui/dialog";
+import ChatAvatarActions from "./chat-avatar-actions";
 
 type ChatBubbleType = {
 	message: IMessage,
@@ -37,13 +38,19 @@ const ChatBubble = ({me,message,prevMessage}:ChatBubbleType) => {
 						isMember={isMember}
 						isGroup={isGroup}
 					/>
-					<div className={`flex z-20 max-w-fit px-2 pt-2 rounded-md shadow-md relative ${bgColor}`}>
+					<div className={`flex flex-col z-20 max-w-fit px-2 pt-2 rounded-md shadow-md relative ${bgColor}`}>
 						<OtherMessageIndicator />
-						{message.messageType === "text" && <TextMessage message={message}/>}
-						{message.messageType === "image" && <ImageMessage message={message} handleClick={()=>setOpen(true)}/>}
-						{message.messageType === "video" && <VideoMessage message={message} />}
-						{open && <ImageDialog src={message.content} open={open} onClose={() => setOpen(false)} />}
-						<MessageTime time={time} fromMe={fromMe} />
+						{isGroup && <ChatAvatarActions 
+							message = {message}
+							me = {me}
+						/>}
+						<div className="flex">
+							{message.messageType === "text" && <TextMessage message={message}/>}
+							{message.messageType === "image" && <ImageMessage message={message} handleClick={()=>setOpen(true)}/>}
+							{message.messageType === "video" && <VideoMessage message={message} />}
+							{open && <ImageDialog src={message.content} open={open} onClose={() => setOpen(false)} />}
+							<MessageTime time={time} fromMe={fromMe} />
+						</div>
 					</div>
 				</div>
 			</>
